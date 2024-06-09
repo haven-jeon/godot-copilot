@@ -1,11 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://rv5dl08lcb8e"]
+[gd_scene load_steps=9 format=3 uid="uid://rv5dl08lcb8e"]
 
 [ext_resource type="Script" path="res://addons/copilot/Copilot.gd" id="1_pq1gj"]
 [ext_resource type="Script" path="res://addons/copilot/OpenAIChat.gd" id="2"]
 [ext_resource type="Material" uid="uid://cccmbprav6vgu" path="res://addons/copilot/small_icon.tres" id="2_gdw4j"]
 [ext_resource type="Script" path="res://addons/copilot/OpenAICompletion.gd" id="3_loa2x"]
 [ext_resource type="Material" uid="uid://bl1rtf743e4l3" path="res://addons/copilot/large_icon.tres" id="3_xn70b"]
+[ext_resource type="Script" path="res://addons/copilot/GeminiCompletion.gd" id="6_fk1xo"]
 [ext_resource type="Script" path="res://addons/copilot/GithubCopilot.gd" id="6_hmh8w"]
+[ext_resource type="Script" path="res://addons/copilot/AzureGPTCompletion.gd" id="6_pql45"]
 
 [node name="Copilot" type="Control"]
 layout_mode = 3
@@ -31,6 +33,7 @@ size_flags_horizontal = 4
 
 [node name="ContextTitle" type="Label" parent="VBoxParent"]
 modulate = Color(1, 1, 1, 0.7)
+custom_minimum_size = Vector2(10, 30)
 layout_mode = 2
 text = "Current Context"
 horizontal_alignment = 1
@@ -38,6 +41,7 @@ vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="Context" type="Label" parent="VBoxParent"]
+custom_minimum_size = Vector2(10, 30)
 layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -59,6 +63,7 @@ text = "How To Use"
 layout_mode = 2
 
 [node name="HowTo" type="Label" parent="VBoxParent"]
+custom_minimum_size = Vector2(10, 30)
 layout_mode = 2
 text = "Press the selected shortcut in the code editor to request a completion from Copilot at the current caret position"
 autowrap_mode = 3
@@ -91,6 +96,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(2.08165e-12, 2.08165e-12)
 layout_mode = 2
 size_flags_horizontal = 10
+text = "AIzaSyAe7CDx8nnwnNC9rf90gjzW_8j9aRx0x4M"
 placeholder_text = "API Key"
 secret = true
 
@@ -110,11 +116,15 @@ vertical_alignment = 1
 [node name="VSeparator" type="VSeparator" parent="VBoxParent/ModelSetting"]
 layout_mode = 2
 
-[node name="Model" type="OptionButton" parent="VBoxParent/ModelSetting"]
+[node name="ModelSetting" type="VBoxContainer" parent="VBoxParent/ModelSetting"]
+layout_mode = 2
+
+[node name="Model" type="OptionButton" parent="VBoxParent/ModelSetting/ModelSetting"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 10
-item_count = 3
-selected = 1
+item_count = 6
+selected = 5
 fit_to_longest_item = false
 popup/item_0/text = "text-davinci-003"
 popup/item_0/id = 0
@@ -122,6 +132,33 @@ popup/item_1/text = "gpt-3.5-turbo"
 popup/item_1/id = 1
 popup/item_2/text = "gpt-4"
 popup/item_2/id = 2
+popup/item_3/text = "azure-gpt-4-32k"
+popup/item_3/id = 3
+popup/item_4/text = "gpt-4-github-copilot"
+popup/item_4/id = 4
+popup/item_5/text = "gemini-1.5-pro"
+popup/item_5/id = 5
+
+[node name="Deployment" type="LineEdit" parent="VBoxParent/ModelSetting/ModelSetting"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "arc4-32k"
+placeholder_text = "Deployment name"
+
+[node name="Endpoint" type="LineEdit" parent="VBoxParent/ModelSetting/ModelSetting"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ai-test-with-east-us2-region"
+placeholder_text = "Endpoint"
+
+[node name="Apiversion" type="LineEdit" parent="VBoxParent/ModelSetting/ModelSetting"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "2023-05-15"
+placeholder_text = "Api-version"
 
 [node name="ShortcutSetting" type="HBoxContainer" parent="VBoxParent"]
 custom_minimum_size = Vector2(2.08165e-12, 2.08165e-12)
@@ -146,16 +183,14 @@ size_flags_horizontal = 10
 [node name="Modifier" type="OptionButton" parent="VBoxParent/ShortcutSetting/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 10
-item_count = 4
-selected = 2
-popup/item_0/text = "Cmd"
+item_count = 3
+selected = 0
+popup/item_0/text = "Alt"
 popup/item_0/id = 0
-popup/item_1/text = "Option"
+popup/item_1/text = "Ctrl"
 popup/item_1/id = 1
-popup/item_2/text = "Control"
+popup/item_2/text = "Shift"
 popup/item_2/id = 2
-popup/item_3/text = "Shift"
-popup/item_3/id = 3
 
 [node name="Key" type="OptionButton" parent="VBoxParent/ShortcutSetting/HBoxContainer"]
 layout_mode = 2
@@ -251,6 +286,7 @@ button_pressed = true
 text = "Enabled"
 
 [node name="Info" type="RichTextLabel" parent="VBoxParent"]
+visible = false
 layout_mode = 2
 focus_mode = 2
 fit_content = true
@@ -264,8 +300,14 @@ script = ExtResource("3_loa2x")
 [node name="OpenAIChat" type="Node" parent="LLMs"]
 script = ExtResource("2")
 
+[node name="AzureGPTCompletion" type="Node" parent="LLMs"]
+script = ExtResource("6_pql45")
+
 [node name="GithubCopilot" type="Node" parent="LLMs"]
 script = ExtResource("6_hmh8w")
+
+[node name="GeminiCompletion" type="Node" parent="LLMs"]
+script = ExtResource("6_fk1xo")
 
 [node name="Version" type="Label" parent="."]
 layout_mode = 1
@@ -280,7 +322,10 @@ horizontal_alignment = 2
 vertical_alignment = 2
 
 [connection signal="text_changed" from="VBoxParent/OpenAiSetting/OpenAiKey" to="." method="_on_open_ai_key_changed"]
-[connection signal="item_selected" from="VBoxParent/ModelSetting/Model" to="." method="_on_model_selected"]
+[connection signal="item_selected" from="VBoxParent/ModelSetting/ModelSetting/Model" to="." method="_on_model_selected"]
+[connection signal="text_changed" from="VBoxParent/ModelSetting/ModelSetting/Deployment" to="." method="_on_deployment_text_changed"]
+[connection signal="text_changed" from="VBoxParent/ModelSetting/ModelSetting/Endpoint" to="." method="_on_endpoint_text_changed"]
+[connection signal="text_changed" from="VBoxParent/ModelSetting/ModelSetting/Apiversion" to="." method="_on_apiversion_text_changed"]
 [connection signal="item_selected" from="VBoxParent/ShortcutSetting/HBoxContainer/Modifier" to="." method="_on_shortcut_modifier_selected"]
 [connection signal="item_selected" from="VBoxParent/ShortcutSetting/HBoxContainer/Key" to="." method="_on_shortcut_key_selected"]
 [connection signal="toggled" from="VBoxParent/MultilineSetting/Multiline" to="." method="_on_multiline_toggled"]
@@ -289,5 +334,9 @@ vertical_alignment = 2
 [connection signal="completion_received" from="LLMs/OpenAICompletion" to="." method="_on_code_completion_received"]
 [connection signal="completion_error" from="LLMs/OpenAIChat" to="." method="_on_code_completion_error"]
 [connection signal="completion_received" from="LLMs/OpenAIChat" to="." method="_on_code_completion_received"]
+[connection signal="completion_error" from="LLMs/AzureGPTCompletion" to="." method="_on_code_completion_error"]
+[connection signal="completion_received" from="LLMs/AzureGPTCompletion" to="." method="_on_code_completion_received"]
 [connection signal="completion_error" from="LLMs/GithubCopilot" to="." method="_on_code_completion_error"]
 [connection signal="completion_received" from="LLMs/GithubCopilot" to="." method="_on_code_completion_received"]
+[connection signal="completion_error" from="LLMs/GeminiCompletion" to="." method="_on_code_completion_error"]
+[connection signal="completion_received" from="LLMs/GeminiCompletion" to="." method="_on_code_completion_received"]

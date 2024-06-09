@@ -1,7 +1,7 @@
 @tool
 extends "res://addons/copilot/LLM.gd"
 
-const URL = "https://api.openai.com/v1/chat/completions"
+var URL: String = "https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}"
 const SYSTEM_TEMPLATE = """You are a brilliant coding assistant for the game-engine Godot. The version used is Godot 4.0, and all code must be valid GDScript!
 That means the new GDScript 2.0 syntax is used. Here's a couple of important changes that were introduced:
 - Use @export annotation for exports
@@ -16,7 +16,13 @@ That means the new GDScript 2.0 syntax is used. Here's a couple of important cha
 
 Remember, this is not Python. It's GDScript for use in Godot.
 
-You may only answer in code, never add any explanations. In your prompt, there will be an !INSERT_CODE_HERE! tag. Only respond with plausible code that may be inserted at that point. Never repeat the full script, only the parts to be inserted. Treat this as if it was an autocompletion. You may continue whatever word or expression was left unfinished before the tag. Make sure indentation matches the surrounding context."""
+You may only answer in code, never add any explanations. 
+In prompt, there will be an !INSERT_CODE_HERE! tag. 
+Only respond with plausible code that may be inserted at that point.
+Generate code with appropriate korean descriptions on important parts of the code. 
+Never repeat the full script, only the parts to be inserted.
+You may continue whatever word or expression was left unfinished before the tag.
+Make sure indentation matches the surrounding context."""
 const INSERT_TAG = "!INSERT_CODE_HERE!"
 const MAX_LENGTH = 8500
 
@@ -38,8 +44,7 @@ const ROLES = {
 
 func _get_models():
     return [
-        "gpt-3.5-turbo",
-        "gpt-4"
+        "azure-gpt-4-32k"
     ]
 
 func _set_model(model_name):
@@ -77,7 +82,6 @@ func format_prompt(prompt, suffix):
 
 func get_completion(messages, prompt, suffix):
     var body = {
-        "model": model,
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500,
@@ -85,24 +89,29 @@ func get_completion(messages, prompt, suffix):
     }
     var headers = [
         "Content-Type: application/json",
-        "Authorization: Bearer %s" % api_key
+        "api-key: %s" % api_key
     ]
     var http_request = HTTPRequest.new()
     add_child(http_request)
     http_request.connect("request_completed",Callable(self,"on_request_completed").bind(prompt, suffix))
     var json_body = JSON.stringify(body)
     var buffer = json_body.to_utf8_buffer()
-    var error = http_request.request(URL, headers, HTTPClient.METHOD_POST, json_body)
+    var url = URL.format({"your-resource-name": end_point,
+                          "deployment-id": dep_name,
+                          "api-version": api_version})
+    var error = http_request.request(url, headers, HTTPClient.METHOD_POST, json_body)
+    print(url)
+    print(headers)
     if error != OK:
         emit_signal("completion_error", null)
-
 
 func on_request_completed(result, response_code, headers, body, pre, post):
     var test_json_conv = JSON.new()
     test_json_conv.parse(body.get_string_from_utf8())
     var json = test_json_conv.get_data()
     var response = json
-    if !response.has("choices") :
+    print(response)
+    if response == null or !response.has("choices") :
         emit_signal("completion_error", response)
         return
     var completion = response.choices[0].message
